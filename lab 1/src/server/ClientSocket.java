@@ -3,6 +3,8 @@ package server;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public class ClientSocket extends Thread {
     private Socket socket;
@@ -134,6 +136,7 @@ public class ClientSocket extends Thread {
             System.out.println("File successfully created!");
 
         } catch (IOException e) {
+            file.delete(); //удаляем файл, т.к. повторная передача не удалась   !!!!!
             System.out.println("Повторная передача сдохла!");
             e.printStackTrace();
         } finally {
@@ -157,6 +160,8 @@ public class ClientSocket extends Thread {
 
         FileOutputStream output = new FileOutputStream(file);
         try {
+            Date startTime = new Date();
+
             int i = 1000;
             for (int j = 0; j < length / 1000; j++) {
                 while (i != 0) {
@@ -181,6 +186,11 @@ public class ClientSocket extends Thread {
             Server.tokens.remove(socket.getInetAddress()); //если передача успешная, то удаляем токен
 
             transferFlag = false;
+
+            Date endTime = new Date();
+            long resultTime = endTime.getTime() - startTime.getTime();
+            long resultTimeInSeconds = TimeUnit.SECONDS.convert(resultTime, TimeUnit.MILLISECONDS);
+            System.out.println("Transfer time: " + ((resultTimeInSeconds > 0) ? resultTimeInSeconds + "s" : resultTime + "ms"));
 
             System.out.println("File successfully created!");
         } finally {
