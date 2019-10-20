@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.Socket;
 
 //upload C:\Users\Skiba Iryna\Desktop\check.txt
+//upload C:\Users\Skiba Iryna\Desktop\с.jpg
 public class Client {
     private Socket socket;
     public static final int PORT = 4004;
@@ -25,8 +26,14 @@ public class Client {
         consoleReader = new BufferedReader(new InputStreamReader(System.in));
     }
 
-    //можно при подключении присылать ip address
     public void work() {
+        try {
+            getStartInformation();
+        } catch (IOException e) {
+            System.out.println("у тебя проблемы на клиенте!!");
+            e.printStackTrace();
+        }
+
         try {
             try {
                 System.out.println("Вы что-то хотели сказать? Введите это здесь:");
@@ -65,9 +72,52 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
-        //System.out.println("client!");
+    private void getStartInformation() throws IOException {
+        DataInputStream dis = new DataInputStream(in);
+        boolean flag = dis.readBoolean();
+        long size = dis.readLong();
+        long pos = dis.readLong();
+        String name = bufferedReader.readLine();
+        if (flag) continueUpload(size, pos, name);
+    }
 
+    private void continueUpload(long size, long position, String name) throws IOException {
+        File file = new File("C:\\Users\\Skiba Iryna\\Desktop\\" + name);
+
+        if (file.exists() && file.isFile()) {
+            FileInputStream input = new FileInputStream(file);
+            try {
+                //пропускаем, то что уже записано, но надо избавиться от этой херни
+                for (int j = 0; j < position; j++) {
+                    input.read();
+                }
+
+                int i = 1000;
+                for (int j = 0; j < size / 1000; j++) {
+                    while (i != 0) {
+                        out.write(input.read());
+                        i--;
+                    }
+                    out.flush();
+                    i = 1000;
+                }
+
+                //докачаваем остатки
+                long f = size % 1000;
+                while (f != 0) {
+                    out.write(input.read());
+                    f--;
+                }
+                out.flush();
+            } finally {
+                //закрываем файл
+                input.close();
+            }
+        } else {
+            System.out.println("File isn't exist!");
+        }
     }
 
     private String getCommand(String consoleWord) {
